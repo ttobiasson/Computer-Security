@@ -34,9 +34,10 @@ int main(int argc, char *argv[]) {
 
 	char important2[LENGTH] = "**IMPORTANT 2**";
 
-	//char   *c_pass; //you might want to use this variable later...
+	
 	char prompt[] = "password: ";
 	char *user_pass;
+	char *crypt_pass;
 
 	sighandler();
 
@@ -59,17 +60,17 @@ int main(int argc, char *argv[]) {
 				LENGTH - 1, LENGTH - 1, important1);
 		printf("Value of variable 'important 2' after input of login name: %*.*s\n",
 		 		LENGTH - 1, LENGTH - 1, important2);
-
 		user_pass = getpass(prompt);
+		crypt_pass = crypt(user_pass, "AA");
 		passwddata = mygetpwnam(strtok(user, "\n"));
-		
+		printf("%s", crypt_pass);
 
 		if (passwddata != NULL) {
 			int i;
-			char pw[17];
+			char *pw;
 			/* You have to encrypt user_pass for this to work */
 			/* Don't forget to include the salt */
-			if (!strcmp(user_pass, passwddata->passwd)) {
+			if (!strcmp(crypt_pass, passwddata->passwd)) {
 				printf(" You're in !\n");
 				printf("Failed login attempts: %d\n", passwddata->pwfailed);
 				fprintf(fopen("passdb", "r+"), "%s:%d:%s:%s:%d:%d\n",
@@ -82,12 +83,12 @@ int main(int argc, char *argv[]) {
 				__fpurge(stdin); /* Purge any data in stdin buffer */
 				scanf("%d\n", &i);
 				if(i == 1){
-					printf("New password: ");
 					__fpurge(stdin); /* Purge any data in stdin buffer */
-					fgets(pw, 16, stdin);
+					pw = getpass(prompt);
 					passwddata->pwfailed = 0;
 					passwddata->pwage = 0;
-					passwddata->passwd = strtok(pw, "\n");
+					passwddata->passwd = crypt(pw, passwddata->passwd_salt);
+					passwddata->passwd_salt = "AA";
 					mysetpwent(passwddata->pwname=strtok(user, "\n"), passwddata);
 					
 				}
@@ -95,7 +96,7 @@ int main(int argc, char *argv[]) {
 				/*  check UID, see setuid(2) */
 				/*  start a shell, use execve(2) */
 				//printf("I would run a a shell!");
-				//return 0;
+				return 0;
 
 			}
 			else {
