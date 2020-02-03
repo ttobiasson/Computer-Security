@@ -68,6 +68,12 @@ int main(int argc, char *argv[]) {
 		if (passwddata != NULL) {
 			int i;
 			char *pw;
+
+			if(passwddata->pwfailed > 3){
+				printf("This account has been locked due to security reasons\n");
+			return 0;	
+			}
+			
 			/* You have to encrypt user_pass for this to work */
 			/* Don't forget to include the salt */
 			if (!strcmp(crypt_pass, passwddata->passwd)) {
@@ -97,6 +103,8 @@ int main(int argc, char *argv[]) {
 				/*  start a shell, use execve(2) */
 				//printf("I would run a a shell!");
 				return 0;
+
+				
 
 			}
 			else {
