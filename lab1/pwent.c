@@ -1,7 +1,7 @@
 /* $Header: https://svn.ita.chalmers.se/repos/security/edu/course/computer_security/trunk/lab/login_linux/pwent.c 584 2013-01-19 10:30:22Z pk@CHALMERS.SE $ */
 
 /*
- A simple library for password databases.  Tobias Gedell 2007
+ A simple library for password databases.  Tobias Gedell 2007 
  */
 
 #include <stdio.h>
