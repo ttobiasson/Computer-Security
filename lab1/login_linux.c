@@ -12,7 +12,7 @@
 #include <sys/types.h>
 #include <crypt.h>
 /* Uncomment next line in step 2 */
-#include "pwent.h"
+#include <pwent.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -130,5 +130,4 @@ int main(int argc, char *argv[]) {
 	}
 	return 0;
 }
-
 
