@@ -18,8 +18,12 @@
 #define FALSE 0
 #define LENGTH 16
 
+
+
 void sighandler() {
 
+	signal(SIGINT,sighandler);
+	signal(SIGTSTP,sighandler);
 	/* add signalhandling routines here */
 	/* see 'man 2 signal' */
 }
@@ -38,8 +42,12 @@ int main(int argc, char *argv[]) {
 	char prompt[] = "password: ";
 	char *user_pass;
 	char *crypt_pass;
+	char *const parmList[] = {};
+    char *const envParms[2] = {};
+	FILE *file = fopen(MYPWENT_FILENAME, "r+");
 
 	sighandler();
+	
 
 	while (TRUE) {
 		/* check what important variable contains - do not remove, part of buffer overflow test */
@@ -63,7 +71,6 @@ int main(int argc, char *argv[]) {
 		user_pass = getpass(prompt);
 		crypt_pass = crypt(user_pass, "AA");
 		passwddata = mygetpwnam(strtok(user, "\n"));
-		printf("%s", crypt_pass);
 
 		if (passwddata != NULL) {
 			int i;
@@ -71,7 +78,7 @@ int main(int argc, char *argv[]) {
 
 			if(passwddata->pwfailed > 3){
 				printf("This account has been locked due to security reasons\n");
-			return 0;	
+				return 0;	
 			}
 			
 			/* You have to encrypt user_pass for this to work */
@@ -79,10 +86,11 @@ int main(int argc, char *argv[]) {
 			if (!strcmp(crypt_pass, passwddata->passwd)) {
 				printf(" You're in !\n");
 				printf("Failed login attempts: %d\n", passwddata->pwfailed);
-				fprintf(fopen("passdb", "r+"), "%s:%d:%s:%s:%d:%d\n",
+				fprintf(file, "%s:%d:%s:%s:%d:%d\n",
 					passwddata->pwname, passwddata->uid, passwddata->passwd, passwddata->passwd_salt,
-					passwddata->pwfailed = 0, passwddata->pwage +1);
+					0, passwddata->pwage +1);
 				
+
 			if(passwddata->pwage > 10){
 				printf("You need to change your password\n");
 				printf("If you want to change password, press 1, otherwise 2\n");
@@ -101,8 +109,10 @@ int main(int argc, char *argv[]) {
 			}
 				/*  check UID, see setuid(2) */
 				/*  start a shell, use execve(2) */
+				fclose(file);
+				execve("/bin/sh", parmList, envParms);
 				//printf("I would run a a shell!");
-				return 0;
+				
 
 				
 
@@ -120,4 +130,5 @@ int main(int argc, char *argv[]) {
 	}
 	return 0;
 }
+
 
