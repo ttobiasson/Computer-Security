@@ -12,7 +12,7 @@
 #include <sys/types.h>
 #include <crypt.h>
 /* Uncomment next line in step 2 */
-#include <pwent.h>
+#include "pwent.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -21,20 +21,23 @@
 
 
 void sighandler() {
-
-	signal(SIGINT,sighandler);
-	signal(SIGTSTP,sighandler);
-	/* add signalhandling routines here */
-	/* see 'man 2 signal' */
+	printf("Caught signal\n");
 }
 
 int main(int argc, char *argv[]) {
+	
+	signal(SIGINT, sighandler);
+	signal(SIGTSTP,sighandler);
+	signal(SIGQUIT,sighandler);
 
+	
 	mypwent *passwddata; /* this has to be redefined in step 2 */
 	/* see pwent.h */
 	char important1[LENGTH] = "**IMPORTANT 1**";
 
 	char user[LENGTH];
+
+
 
 	char important2[LENGTH] = "**IMPORTANT 2**";
 
@@ -42,9 +45,8 @@ int main(int argc, char *argv[]) {
 	char prompt[] = "password: ";
 	char *user_pass;
 	char *crypt_pass;
-	char *const parmList[] = {};
-    char *const envParms[2] = {};
-	FILE *file = fopen(MYPWENT_FILENAME, "r+");
+	char *const parmList[2] = {"LlLL",NULL};
+	char *const arg[] = {"/bin/sh"};
 
 	sighandler();
 	
@@ -86,16 +88,16 @@ int main(int argc, char *argv[]) {
 			if (!strcmp(crypt_pass, passwddata->passwd)) {
 				printf(" You're in !\n");
 				printf("Failed login attempts: %d\n", passwddata->pwfailed);
-				fprintf(file, "%s:%d:%s:%s:%d:%d\n",
-					passwddata->pwname, passwddata->uid, passwddata->passwd, passwddata->passwd_salt,
-					0, passwddata->pwage +1);
+				passwddata->pwage++;
+				passwddata->pwfailed = 0;
+				mysetpwent(passwddata->pwname, passwddata);
 				
 
 			if(passwddata->pwage > 10){
 				printf("You need to change your password\n");
 				printf("If you want to change password, press 1, otherwise 2\n");
 				__fpurge(stdin); /* Purge any data in stdin buffer */
-				scanf("%d\n", &i);
+				scanf(" %d\n", &i);
 				if(i == 1){
 					__fpurge(stdin); /* Purge any data in stdin buffer */
 					pw = getpass(prompt);
@@ -103,25 +105,28 @@ int main(int argc, char *argv[]) {
 					passwddata->pwage = 0;
 					passwddata->passwd = crypt(pw, passwddata->passwd_salt);
 					passwddata->passwd_salt = "AA";
-					mysetpwent(passwddata->pwname=strtok(user, "\n"), passwddata);
+					mysetpwent(passwddata->pwname, passwddata);
 					
 				}
 			}
-				/*  check UID, see setuid(2) */
-				/*  start a shell, use execve(2) */
-				fclose(file);
-				execve("/bin/sh", parmList, envParms);
-				//printf("I would run a a shell!");
-				
+			int code = setuid(passwddata->uid);
 
-				
+			if (code < 0) {
+    			printf("Setuid failed\n");
+    			exit(code);
+    		}
 
+			if(execve(arg[0], parmList, NULL) == -1){
+				printf("Error in running execve\n");
+				return 0;
+			}
+
+			
 			}
 			else {
 				printf("Login Incorrect \n");
-				fprintf(fopen("passdb", "r+"), "%s:%d:%s:%s:%d:%d\n",
-					passwddata->pwname, passwddata->uid, passwddata->passwd, passwddata->passwd_salt,
-					passwddata->pwfailed +1, passwddata->pwage);
+				passwddata->pwfailed++;
+				mysetpwent(passwddata->pwname, passwddata);
 
 			} 
 			
