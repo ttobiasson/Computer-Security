@@ -2,7 +2,7 @@
 
 /* pwent.h - Password entry header file */
 
-/* These routines write and read records from a password database, 
+/* These routines write and read records from a password database,
  named "passdb" in the current directory.
 
  The 'mygetpwnam' routine takes as argument a username, and returns
