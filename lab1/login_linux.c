@@ -59,12 +59,23 @@ void getuser_checkbuffer(char* user){
        printf("Value of variable 'important 2' after input of login name: %*.*s\n",
                LENGTH - 1, LENGTH - 1, important2);
 }
-
+void initSignals(){
+    if(signal(SIGINT, signalhandler) == SIG_ERR){
+       printf("Cannot init signal SIGINT");
+       return 0;
+   }
+   if(signal(SIGTSTP, signalhandler) == SIG_ERR){
+       printf("Cannot init signal SIGTSTP");
+       return 0;
+   }
+   if(signal(SIGQUIT, signalhandler) == SIG_ERR){
+       printf("Cannot init signal SIGQUIT");
+       return 0;
+   }
+}
 int main(int argc, char *argv[]) {
-    
-   signal(SIGINT, signalhandler);
-   signal(SIGTSTP, signalhandler);
-   signal(SIGQUIT, signalhandler);
+   
+   initSignals();
 
    char *SIG_MSG = malloc(24);
 
@@ -106,7 +117,10 @@ int main(int argc, char *argv[]) {
                printf("Failed login attempts: %d\n", passwddata->pwfailed);
                passwddata->pwage++;
                passwddata->pwfailed = 0;
-               mysetpwent(passwddata->pwname, passwddata);
+               if(mysetpwent(passwddata->pwname, passwddata) == -1){
+                   printf("Cannot update user info");
+                   return 0;
+               }
               
            if(passwddata->pwage > 10){
                printf("You need to change your password\n"
@@ -121,7 +135,10 @@ int main(int argc, char *argv[]) {
                    passwddata->pwage = 0;
 				   passwddata->passwd_salt = generatesalt();
                    passwddata->passwd = crypt(pw, passwddata->passwd_salt);
-                   mysetpwent(passwddata->pwname, passwddata);
+                   if(mysetpwent(passwddata->pwname, passwddata) == -1){
+                       printf("Cannot update user info");
+                       return 0;
+                   }
                   
                }
            }
@@ -138,7 +155,10 @@ int main(int argc, char *argv[]) {
            else {
                printf("Login Incorrect \n");
                passwddata->pwfailed++;
-               mysetpwent(passwddata->pwname, passwddata);
+               if(mysetpwent(passwddata->pwname, passwddata) == -1){
+                   printf("Cannot update user info");
+                   return 0;
+               }
            }
        }else printf("Perhaps wrong login details \n");
    }
